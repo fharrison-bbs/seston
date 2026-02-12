@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setsuno — Posture Intelligence Devices</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090e;--bg2:#0b0f17;--fg:#e8ecf4;--fg2:#8a95aa;--fg3:#4a5568;
+  --mint:#00e5a0;--mint2:#00c483;--mint3:rgba(0,229,160,0.08);
+  --blue:#3b82f6;--coral:#ff6b6b;
+  --glass:rgba(11,15,23,0.72);--glass2:rgba(0,229,160,0.04);
+  --border:rgba(0,229,160,0.08);--border2:rgba(0,229,160,0.15);
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{background:var(--bg);color:var(--fg);font-family:'Outfit',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ─── Noise overlay ─── */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:128px 128px;opacity:0.4}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--mint);border-radius:2px;opacity:0.3}
+
+/* ─── Nav ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 40px;height:72px;display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(180deg,rgba(7,9,14,0.95),rgba(7,9,14,0.6));
+  backdrop-filter:blur(40px);border-bottom:1px solid var(--border);
+  transition:all 0.4s ease}
+nav.scrolled{height:60px;background:rgba(7,9,14,0.97)}
+.nav-left{display:flex;align-items:center;gap:32px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--mint),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--bg)}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--fg);letter-spacing:-0.5px}
+.dashboard-link{display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;
+  background:var(--mint3);border:1px solid var(--border2);color:var(--mint);font-size:13px;font-weight:500;
+  text-decoration:none;transition:all 0.3s ease;font-family:'DM Mono',monospace;letter-spacing:0.5px}
+.dashboard-link:hover{background:rgba(0,229,160,0.12);border-color:var(--mint);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,229,160,0.15)}
+.dashboard-link svg{width:16px;height:16px}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{color:var(--fg2);text-decoration:none;font-size:14px;font-weight:400;transition:color 0.3s;letter-spacing:0.2px}
+.nav-links a:hover{color:var(--mint)}
+.nav-cta{padding:10px 24px;border-radius:10px;background:var(--mint);color:var(--bg);font-weight:600;font-size:13px;border:none;cursor:pointer;transition:all 0.3s;letter-spacing:0.3px}
+.nav-cta:hover{background:#00ffb3;transform:translateY(-1px);box-shadow:0 6px 30px rgba(0,229,160,0.25)}
+
+/* ─── Hero ─── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:120px 40px 80px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;overflow:hidden}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbFloat 12s ease-in-out infinite}
+.hero-orb.o1{width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,160,0.12),transparent 70%);top:-10%;right:-10%;animation-delay:0s}
+.hero-orb.o2{width:400px;height:400px;background:radial-gradient(circle,rgba(59,130,246,0.08),transparent 70%);bottom:10%;left:-5%;animation-delay:-4s}
+.hero-orb.o3{width:300px;height:300px;background:radial-gradient(circle,rgba(0,229,160,0.06),transparent 70%);top:40%;right:20%;animation-delay:-8s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,15px) scale(0.95)}}
+.hero-grid{position:absolute;inset:0;background-image:
+  linear-gradient(rgba(0,229,160,0.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,229,160,0.03) 1px,transparent 1px);
+  background-size:80px 80px;mask-image:radial-gradient(ellipse at 50% 40%,black 20%,transparent 70%)}
+
+.hero-content{position:relative;text-align:center;max-width:900px;z-index:2}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px 6px 8px;border-radius:100px;
+  background:var(--glass2);border:1px solid var(--border2);margin-bottom:32px;
+  animation:fadeUp 0.8s ease both}
+.hero-badge-dot{width:8px;height:8px;border-radius:50%;background:var(--mint);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,160,0.4)}50%{opacity:0.8;box-shadow:0 0 0 8px rgba(0,229,160,0)}}
+.hero-badge span{font-family:'DM Mono',monospace;font-size:12px;color:var(--mint);letter-spacing:1px}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(48px,8vw,96px);font-weight:800;line-height:1;letter-spacing:-3px;
+  margin-bottom:24px;animation:fadeUp 0.8s ease 0.1s both}
+.hero-title .accent{background:linear-gradient(135deg,var(--mint),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(16px,2vw,20px);color:var(--fg2);max-width:560px;margin:0 auto 48px;line-height:1.6;font-weight:300;
+  animation:fadeUp 0.8s ease 0.2s both}
+.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;animation:fadeUp 0.8s ease 0.3s both}
+.btn-primary{padding:16px 40px;border-radius:14px;background:var(--mint);color:var(--bg);font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all 0.3s;letter-spacing:0.3px;font-family:'Outfit',sans-serif}
+.btn-primary:hover{background:#00ffb3;transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,229,160,0.3)}
+.btn-secondary{padding:16px 40px;border-radius:14px;background:transparent;color:var(--fg);font-weight:500;font-size:15px;border:1px solid var(--border2);cursor:pointer;transition:all 0.3s;font-family:'Outfit',sans-serif}
+.btn-secondary:hover{border-color:var(--mint);color:var(--mint);background:var(--mint3)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── Floating devices showcase ─── */
+.hero-devices{position:relative;width:100%;max-width:800px;height:340px;margin-top:60px;animation:fadeUp 1s ease 0.5s both}
+.float-device{position:absolute;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:20px;padding:24px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.5s cubic-bezier(0.23,1,0.32,1);cursor:default}
+.float-device:hover{transform:translateY(-12px) scale(1.04)!important;border-color:var(--mint);box-shadow:0 20px 60px rgba(0,229,160,0.1)}
+.float-device .icon{font-size:36px;margin-bottom:4px}
+.float-device .name{font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--fg)}
+.float-device .type{font-family:'DM Mono',monospace;font-size:10px;color:var(--fg3);letter-spacing:1px}
+.float-device .score-bar{width:60px;height:3px;border-radius:2px;background:var(--bg);overflow:hidden;margin-top:4px}
+.float-device .score-fill{height:100%;border-radius:2px;transition:width 1.5s ease}
+.fd1{top:0;left:50%;transform:translateX(-50%);animation:floatA 6s ease-in-out infinite}
+.fd2{top:80px;left:5%;animation:floatB 7s ease-in-out 0.5s infinite}
+.fd3{top:80px;right:5%;animation:floatB 6.5s ease-in-out 1s infinite}
+.fd4{bottom:0;left:50%;transform:translateX(-50%);animation:floatA 7.5s ease-in-out 1.5s infinite}
+@keyframes floatA{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-14px)}}
+@keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* ─── Stats bar ─── */
+.stats-bar{padding:60px 40px;display:flex;justify-content:center;gap:60px;flex-wrap:wrap;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2)}
+.stat{text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--mint),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:13px;color:var(--fg3);margin-top:4px;letter-spacing:1px;font-weight:300}
+
+/* ─── Section styling ─── */
+section{padding:120px 40px;position:relative}
+.section-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--mint);margin-bottom:16px;text-transform:uppercase}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-2px;line-height:1.1;margin-bottom:20px}
+.section-sub{font-size:17px;color:var(--fg2);max-width:520px;line-height:1.7;font-weight:300}
+
+/* ─── Products grid ─── */
+.products{background:var(--bg2)}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:60px;max-width:1200px}
+.product-card{background:var(--glass);border:1px solid var(--border);border-radius:24px;padding:40px 32px;position:relative;overflow:hidden;transition:all 0.5s cubic-bezier(0.23,1,0.32,1);cursor:default}
+.product-card:hover{border-color:var(--border2);transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.product-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--mint),transparent);opacity:0;transition:opacity 0.5s}
+.product-card:hover::before{opacity:0.5}
+.product-icon{font-size:48px;margin-bottom:20px;display:block}
+.product-name{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;margin-bottom:6px;letter-spacing:-0.5px}
+.product-type{font-family:'DM Mono',monospace;font-size:11px;color:var(--mint);letter-spacing:1.5px;margin-bottom:16px}
+.product-desc{font-size:14px;color:var(--fg2);line-height:1.7;margin-bottom:24px;font-weight:300}
+.product-specs{display:flex;flex-wrap:wrap;gap:8px}
+.spec-tag{padding:4px 12px;border-radius:8px;background:var(--mint3);font-family:'DM Mono',monospace;font-size:10px;color:var(--fg3);letter-spacing:0.5px;border:1px solid var(--border)}
+.product-price{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.price{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--fg)}
+.price span{font-size:14px;color:var(--fg3);font-weight:300;font-family:'Outfit',sans-serif}
+.product-btn{padding:10px 22px;border-radius:10px;background:var(--mint3);border:1px solid var(--border2);color:var(--mint);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:'Outfit',sans-serif}
+.product-btn:hover{background:var(--mint);color:var(--bg)}
+
+/* ─── Features ─── */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:60px;max-width:1200px;border-radius:24px;overflow:hidden}
+.feature{background:var(--bg2);padding:48px 36px;position:relative;transition:all 0.4s}
+.feature:hover{background:rgba(0,229,160,0.03)}
+.feature-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--fg3);letter-spacing:2px;margin-bottom:20px}
+.feature h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:12px;letter-spacing:-0.5px}
+.feature p{font-size:14px;color:var(--fg2);line-height:1.7;font-weight:300}
+
+/* ─── CTA Section ─── */
+.cta-section{text-align:center;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,rgba(0,229,160,0.06),transparent 60%)}
+.cta-content{position:relative;z-index:2}
+.cta-title{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,64px);font-weight:800;letter-spacing:-2px;margin-bottom:20px}
+.cta-sub{font-size:17px;color:var(--fg2);max-width:480px;margin:0 auto 40px;line-height:1.7;font-weight:300}
+
+/* ─── Footer ─── */
+footer{padding:60px 40px 40px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:40px}
+.footer-brand{max-width:300px}
+.footer-brand p{font-size:13px;color:var(--fg3);line-height:1.7;margin-top:12px;font-weight:300}
+.footer-col h4{font-family:'DM Mono',monospace;font-size:10px;color:var(--fg3);letter-spacing:2px;margin-bottom:16px;text-transform:uppercase}
+.footer-col a{display:block;color:var(--fg2);text-decoration:none;font-size:14px;padding:4px 0;transition:color 0.3s;font-weight:300}
+.footer-col a:hover{color:var(--mint)}
+.footer-bottom{width:100%;padding-top:30px;margin-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;color:var(--fg3)}
+
+/* ─── Scroll animations ─── */
+.reveal{opacity:0;transform:translateY(30px);transition:all 0.8s cubic-bezier(0.23,1,0.32,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ─── Responsive ─── */
+@media(max-width:768px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero{padding:100px 20px 60px}
+  .hero-devices{height:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:40px}
+  .float-device{position:static!important;animation:none!important;transform:none!important}
+  .fd1,.fd4{grid-column:span 2;justify-self:center;width:70%}
+  .stats-bar{gap:30px;padding:40px 20px}
+  .stat-num{font-size:32px}
+  section{padding:80px 20px}
+  .features-grid{grid-template-columns:1fr}
+  .products-grid{grid-template-columns:1fr}
+  footer{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav id="nav">
+  <div class="nav-left">
+    <a href="#" class="logo">
+      <div class="logo-mark">S</div>
+      <span class="logo-text">Setsuno</span>
+    </a>
+    <a href="https://claude.ai" class="dashboard-link" title="Open Posture Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+  </div>
+  <div class="nav-links">
+    <a href="#products">Products</a>
+    <a href="#technology">Technology</a>
+    <a href="#about">About</a>
+    <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Pre-Order</button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-orb o1"></div>
+    <div class="hero-orb o2"></div>
+    <div class="hero-orb o3"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      <span>NOW SHIPPING WORLDWIDE</span>
+    </div>
+    <h1 class="hero-title">Your spine,<br><span class="accent">decoded.</span></h1>
+    <p class="hero-sub">Setsuno's AI-powered sensor ecosystem maps your posture in real time — turning invisible strain into visible intelligence.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Explore Devices</button>
+      <button class="btn-secondary" onclick="document.getElementById('technology').scrollIntoView({behavior:'smooth'})">How It Works</button>
+    </div>
+  </div>
+  <div class="hero-devices">
+    <div class="float-device fd1">
+      <span class="icon">&#x231A;</span>
+      <span class="name">PostureBand Pro</span>
+      <span class="type">CLINICAL WEARABLE</span>
+      <div class="score-bar"><div class="score-fill" style="width:92%;background:linear-gradient(90deg,#00e5a0,#3b82f6)"></div></div>
+    </div>
+    <div class="float-device fd2">
+      <span class="icon">&#x1F4CE;</span>
+      <span class="name">PostureSense Clip</span>
+      <span class="type">CLIP SENSOR</span>
+      <div class="score-bar"><div class="score-fill" style="width:85%;background:linear-gradient(90deg,#00e5a0,#3b82f6)"></div></div>
+    </div>
+    <div class="float-device fd3">
+      <span class="icon">&#x1F4F7;</span>
+      <span class="name">PostureCam</span>
+      <span class="type">AI VISION</span>
+      <div class="score-bar"><div class="score-fill" style="width:88%;background:linear-gradient(90deg,#00e5a0,#3b82f6)"></div></div>
+    </div>
+    <div class="float-device fd4">
+      <span class="icon">&#x1FA91;</span>
+      <span class="name">PostureMat</span>
+      <span class="type">SMART SEAT PAD</span>
+      <div class="score-bar"><div class="score-fill" style="width:80%;background:linear-gradient(90deg,#00e5a0,#3b82f6)"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── STATS ─── -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num" data-count="2400000">0</div><div class="stat-label">ACTIVE USERS</div></div>
+  <div class="stat"><div class="stat-num" data-count="47">0</div><div class="stat-label">% PAIN REDUCTION</div></div>
+  <div class="stat"><div class="stat-num" data-count="16">0</div><div class="stat-label">BODY POINTS TRACKED</div></div>
+  <div class="stat"><div class="stat-num" data-count="180">0</div><div class="stat-label">CLINICAL PARTNERS</div></div>
+</div>
+
+<!-- ─── PRODUCTS ─── -->
+<section class="products" id="products">
+  <div class="reveal">
+    <div class="section-label">&#x2022; Products</div>
+    <div class="section-title">Four devices.<br>One ecosystem.</div>
+    <div class="section-sub">Each Setsuno device feeds into a unified AI engine that builds a living map of your postural health.</div>
+  </div>
+  <div class="products-grid reveal" style="transition-delay:0.15s">
+    <div class="product-card">
+      <span class="product-icon">&#x231A;</span>
+      <div class="product-name">PostureBand Pro</div>
+      <div class="product-type">CLINICAL WEARABLE</div>
+      <div class="product-desc">FDA Breakthrough Device. Medical-grade IMU array with 9-axis motion capture, worn at the thoracic spine. Haptic nudges correct posture in real time.</div>
+      <div class="product-specs">
+        <span class="spec-tag">9-Axis IMU</span>
+        <span class="spec-tag">72h Battery</span>
+        <span class="spec-tag">Haptic</span>
+        <span class="spec-tag">IPX7</span>
+      </div>
+      <div class="product-price">
+        <div class="price">$249 <span>/ device</span></div>
+        <button class="product-btn">Pre-Order</button>
+      </div>
+    </div>
+    <div class="product-card">
+      <span class="product-icon">&#x1F4CE;</span>
+      <div class="product-name">PostureSense Clip</div>
+      <div class="product-type">CLIP SENSOR</div>
+      <div class="product-desc">Weighs 8 grams. Clips to any collar or shirt seam. Continuous posture angle detection with smart alerts via your phone.</div>
+      <div class="product-specs">
+        <span class="spec-tag">8g Weight</span>
+        <span class="spec-tag">14-Day Battery</span>
+        <span class="spec-tag">BLE 5.3</span>
+        <span class="spec-tag">Magnetic Mount</span>
+      </div>
+      <div class="product-price">
+        <div class="price">$79 <span>/ device</span></div>
+        <button class="product-btn">Pre-Order</button>
+      </div>
+    </div>
+    <div class="product-card">
+      <span class="product-icon">&#x1FA91;</span>
+      <div class="product-name">PostureMat</div>
+      <div class="product-type">SMART SEAT PAD</div>
+      <div class="product-desc">256-point pressure array maps your seated posture continuously. Detects pelvic tilt, weight asymmetry, and slouch onset before you feel it.</div>
+      <div class="product-specs">
+        <span class="spec-tag">256 Sensors</span>
+        <span class="spec-tag">USB-C Power</span>
+        <span class="spec-tag">Machine Wash</span>
+        <span class="spec-tag">Anti-Slip</span>
+      </div>
+      <div class="product-price">
+        <div class="price">$189 <span>/ device</span></div>
+        <button class="product-btn">Pre-Order</button>
+      </div>
+    </div>
+    <div class="product-card">
+      <span class="product-icon">&#x1F4F7;</span>
+      <div class="product-name">PostureCam</div>
+      <div class="product-type">AI VISION TRACKER</div>
+      <div class="product-desc">Edge-processed computer vision — no cloud, no recordings. Tracks 16 skeletal joints at 30fps with sub-degree angular precision.</div>
+      <div class="product-specs">
+        <span class="spec-tag">On-Device AI</span>
+        <span class="spec-tag">16 Joints</span>
+        <span class="spec-tag">30fps</span>
+        <span class="spec-tag">Privacy-First</span>
+      </div>
+      <div class="product-price">
+        <div class="price">$149 <span>/ device</span></div>
+        <button class="product-btn">Pre-Order</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TECHNOLOGY ─── -->
+<section id="technology">
+  <div class="reveal">
+    <div class="section-label">&#x2022; Technology</div>
+    <div class="section-title">Intelligence at<br>every vertebra.</div>
+    <div class="section-sub">Our sensor fusion engine combines data from every connected device into a unified postural model updated 100 times per second.</div>
+  </div>
+  <div class="features-grid reveal" style="transition-delay:0.15s">
+    <div class="feature">
+      <div class="feature-num">01</div>
+      <h3>Multi-Sensor Fusion</h3>
+      <p>Band, clip, mat, and camera data merge into a single high-fidelity skeletal model. More devices = higher accuracy.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">02</div>
+      <h3>Predictive Strain AI</h3>
+      <p>Machine learning detects micro-patterns that precede pain. Get corrective prompts minutes before strain accumulates.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">03</div>
+      <h3>S-Curve Mapping</h3>
+      <p>Real-time reconstruction of your spine's natural curvature — cervical lordosis through lumbar with sub-millimeter precision.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">04</div>
+      <h3>Adaptive Baselines</h3>
+      <p>Your posture profile evolves daily. Setsuno learns your body mechanics and adjusts targets as flexibility and strength improve.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">05</div>
+      <h3>Clinical Reporting</h3>
+      <p>Export medical-grade posture assessments compatible with physiotherapy, chiropractic, and orthopedic workflows.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-num">06</div>
+      <h3>Privacy by Design</h3>
+      <p>All processing happens on-device or locally. Camera data never leaves your space. HIPAA and GDPR compliant architecture.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ─── -->
+<section class="cta-section" id="cta">
+  <div class="cta-content reveal">
+    <div class="section-label">&#x2022; Get Started</div>
+    <div class="cta-title">Feel the<br><span style="background:linear-gradient(135deg,var(--mint),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent">difference.</span></div>
+    <div class="cta-sub">Join 2.4 million people who've transformed their relationship with their spine. Ships within 5 business days.</div>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary">Pre-Order Now</button>
+      <a href="https://claude.ai" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Open Dashboard
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer id="about">
+  <div class="footer-brand">
+    <a href="#" class="logo"><div class="logo-mark">S</div><span class="logo-text">Setsuno</span></a>
+    <p>Posture intelligence for the way you live and work. Founded in San Francisco, shipping worldwide.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Products</h4>
+    <a href="#products">PostureBand Pro</a>
+    <a href="#products">PostureSense Clip</a>
+    <a href="#products">PostureMat</a>
+    <a href="#products">PostureCam</a>
+  </div>
+  <div class="footer-col">
+    <h4>Company</h4>
+    <a href="#">Careers</a>
+    <a href="#">Research</a>
+    <a href="#">Press</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-col">
+    <h4>Support</h4>
+    <a href="https://claude.ai">Dashboard</a>
+    <a href="#">Help Center</a>
+    <a href="#">Returns</a>
+    <a href="#">Warranty</a>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 Setsuno Health Inc. All rights reserved.</span>
+    <span>Privacy &middot; Terms &middot; Accessibility</span>
+  </div>
+</footer>
+
+<script>
+// ─── Scroll reveal ───
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// ─── Nav scroll effect ───
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ─── Counter animation ───
+const counterObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const target = parseInt(el.dataset.count);
+    const dur = 2000;
+    const start = performance.now();
+    const fmt = target > 10000 ? (n) => (n/1000000).toFixed(1)+'M+' : (n) => n.toLocaleString() + (target === 47 ? '' : target === 180 ? '+' : '');
+    const tick = (now) => {
+      const p = Math.min((now - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(target * ease));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    counterObs.unobserve(el);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.stat-num').forEach(el => counterObs.observe(el));
+</script>
+</body>
+</html>
